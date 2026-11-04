@@ -11,6 +11,7 @@ global holdMs := Max(10, Integer(IniRead(configFile, 'Macro', 'hold_ms', '1000')
 global intervalMs := Max(0, Integer(IniRead(configFile, 'Macro', 'interval_ms', '250')))
 
 global running := false
+global isArmed := false
 global registeredStartHotkey := ''
 global registeredStopHotkey := ''
 
@@ -20,6 +21,7 @@ global stopHotkeyInput := ''
 global targetKeyInput := ''
 global holdMsInput := ''
 global intervalMsInput := ''
+global toggleArmedButton := ''
 global statusLabel := ''
 
 global captureIncludeModifiers := false
@@ -35,55 +37,71 @@ Try {
 }
 
 UpdateStatusLabel()
-mainGui.Show('AutoSize')
+mainGui.Show('w672 h550')
 
 CreateInterface() {
     global mainGui
     global startHotkeyInput, stopHotkeyInput
     global targetKeyInput, holdMsInput, intervalMsInput
+    global toggleArmedButton
     global statusLabel
     global startHotkey, stopHotkey, targetKey, holdMs, intervalMs
 
-    mainGui := Gui('+AlwaysOnTop', 'Macro Mouse')
+    mainGui := Gui('+AlwaysOnTop -MaximizeBox', 'Macro Mouse')
+    mainGui.BackColor := 'F6F8FB'
     mainGui.SetFont('s10', 'Segoe UI')
 
-    mainGui.AddText('xm ym+10 w130', 'Atalho iniciar:')
-    startHotkeyInput := mainGui.AddEdit('x+10 w160', startHotkey)
-    recordStartButton := mainGui.AddButton('x+8 w90', 'Gravar')
+    mainGui.AddText('x16 y14 w640 Center c1F2937', 'Macro Mouse Control Center')
+    mainGui.SetFont('s9', 'Segoe UI')
+    mainGui.AddText('x16 y38 w640 Center c6B7280', 'Configuracao visual para evitar acionamento acidental')
+    mainGui.SetFont('s10', 'Segoe UI')
+
+    mainGui.AddGroupBox('x16 y66 w640 h222', 'Configuracao')
+
+    mainGui.AddText('x34 y96 w130 c111827', 'Atalho iniciar:')
+    startHotkeyInput := mainGui.AddEdit('x170 y92 w290 h24', startHotkey)
+    recordStartButton := mainGui.AddButton('x468 y91 w90 h26', 'Gravar')
     recordStartButton.OnEvent('Click', RecordStartHotkey)
 
-    mainGui.AddText('xm y+14 w130', 'Atalho parar:')
-    stopHotkeyInput := mainGui.AddEdit('x+10 w160', stopHotkey)
-    recordStopButton := mainGui.AddButton('x+8 w90', 'Gravar')
+    mainGui.AddText('x34 y132 w130 c111827', 'Atalho parar:')
+    stopHotkeyInput := mainGui.AddEdit('x170 y128 w290 h24', stopHotkey)
+    recordStopButton := mainGui.AddButton('x468 y127 w90 h26', 'Gravar')
     recordStopButton.OnEvent('Click', RecordStopHotkey)
 
-    mainGui.AddText('xm y+14 w130', 'Tecla/Botao:')
-    targetKeyInput := mainGui.AddEdit('x+10 w160', targetKey)
-    recordTargetButton := mainGui.AddButton('x+8 w90', 'Gravar')
+    mainGui.AddText('x34 y168 w130 c111827', 'Tecla/Botao:')
+    targetKeyInput := mainGui.AddEdit('x170 y164 w290 h24', targetKey)
+    recordTargetButton := mainGui.AddButton('x468 y163 w90 h26', 'Gravar')
     recordTargetButton.OnEvent('Click', RecordTargetKey)
 
-    mainGui.AddText('xm y+14 w130', 'Tempo segurar (ms):')
-    holdMsInput := mainGui.AddEdit('x+10 w160 Number', holdMs)
+    mainGui.AddText('x34 y204 w130 c111827', 'Tempo segurar (ms):')
+    holdMsInput := mainGui.AddEdit('x170 y200 w180 h24 Number', holdMs)
 
-    mainGui.AddText('xm y+14 w130', 'Intervalo (ms):')
-    intervalMsInput := mainGui.AddEdit('x+10 w160 Number', intervalMs)
+    mainGui.AddText('x34 y240 w130 c111827', 'Intervalo (ms):')
+    intervalMsInput := mainGui.AddEdit('x170 y236 w180 h24 Number', intervalMs)
 
-    saveButton := mainGui.AddButton('xm y+20 w150', 'Salvar e aplicar')
+    mainGui.AddGroupBox('x16 y302 w640 h92', 'Controle')
+
+    saveButton := mainGui.AddButton('x34 y336 w150 h30', 'Salvar e aplicar')
     saveButton.OnEvent('Click', SaveAndApply)
 
-    startButton := mainGui.AddButton('x+10 w80', 'Iniciar')
+    startButton := mainGui.AddButton('x196 y336 w90 h30', 'Iniciar')
     startButton.OnEvent('Click', StartMacro)
 
-    stopButton := mainGui.AddButton('x+10 w80', 'Parar')
+    stopButton := mainGui.AddButton('x296 y336 w90 h30', 'Parar')
     stopButton.OnEvent('Click', StopMacro)
 
-    statusLabel := mainGui.AddText('xm y+16 w620', 'Status: Parado')
+    toggleArmedButton := mainGui.AddButton('x396 y336 w162 h30', 'Ativar Macro')
+    toggleArmedButton.OnEvent('Click', ToggleArmed)
+
+    mainGui.AddGroupBox('x16 y406 w640 h128', 'Status e ajuda')
+
+    statusLabel := mainGui.AddText('x34 y436 w600 c111827', 'Status: Parado')
 
     helpText := 'Clique em Gravar e pressione a tecla desejada (Esc cancela).'
-    mainGui.AddText('xm y+6 w620', helpText)
+    mainGui.AddText('x34 y462 w600 c4B5563', helpText)
 
     examplesText := 'Exemplos: LButton, RButton, MButton, Space, Enter, F6, ^!s'
-    mainGui.AddText('xm y+4 w620', examplesText)
+    mainGui.AddText('x34 y486 w600 c4B5563', examplesText)
 
     mainGui.OnEvent('Close', GuiClose)
 }
@@ -244,6 +262,24 @@ SaveAndApply(*) {
     }
 }
 
+ToggleArmed(*) {
+    global isArmed
+
+    SetArmedState(!isArmed)
+}
+
+SetArmedState(newState) {
+    global isArmed, running
+
+    isArmed := newState
+
+    if !isArmed && running {
+        running := false
+    }
+
+    UpdateStatusLabel()
+}
+
 ApplyHotkeys(newStart, newStop) {
     global registeredStartHotkey, registeredStopHotkey
 
@@ -280,7 +316,12 @@ ParseIntWithMin(rawValue, minValue, fieldName) {
 }
 
 StartMacro(*) {
-    global running
+    global running, isArmed
+
+    if !isArmed {
+        SoundBeep(1500, 70)
+        return
+    }
 
     if running {
         return
@@ -299,9 +340,9 @@ StopMacro(*) {
 }
 
 MacroLoop() {
-    global running, targetKey, holdMs, intervalMs
+    global running, isArmed, targetKey, holdMs, intervalMs
 
-    if !running {
+    if !running || !isArmed {
         return
     }
 
@@ -328,11 +369,18 @@ MacroLoop() {
 }
 
 UpdateStatusLabel() {
-    global statusLabel, running
+    global statusLabel, running, isArmed, toggleArmedButton
     global startHotkey, stopHotkey, targetKey, holdMs, intervalMs
 
     state := running ? 'Rodando' : 'Parado'
+    protectionState := isArmed ? 'Ativado' : 'Desativado'
+
+    if IsObject(toggleArmedButton) {
+        toggleArmedButton.Text := isArmed ? 'Desativar Macro' : 'Ativar Macro'
+    }
+
     statusLabel.Value := 'Status: ' state
+        . ' | Protecao: ' protectionState
         . ' | Inicio: ' startHotkey
         . ' | Parar: ' stopHotkey
         . ' | Tecla: ' targetKey

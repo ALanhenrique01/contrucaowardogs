@@ -23,7 +23,8 @@ Este projeto cria um macro com AutoHotkey v2 para:
 2. Na janela do macro, configure todos os campos.
 3. Use os botoes `Gravar` para capturar teclas/atalhos.
 4. Clique em `Salvar e aplicar`.
-5. Use `Iniciar`/`Parar` na interface ou os atalhos definidos.
+5. Clique em `Ativar Macro` para liberar a execucao.
+6. Use `Iniciar`/`Parar` na interface ou os atalhos definidos.
 
 ## Configuracao na interface
 
@@ -34,6 +35,7 @@ Campos disponiveis:
 - `target_key`: tecla ou botao a pressionar (ex.: `LButton`, `RButton`, `Space`, `Enter`)
 - `hold_ms`: tempo segurando pressionado, em milissegundos
 - `interval_ms`: pausa entre ciclos, em milissegundos
+- `Ativar Macro` / `Desativar Macro`: trava de seguranca para evitar acionamento acidental
 
 ## Exemplos uteis
 
@@ -48,3 +50,4 @@ Campos disponiveis:
 - O arquivo `config.ini` ainda existe para persistir suas configuracoes.
 - Pressione `Esc` durante a gravacao para cancelar.
 - Se o atalho nao funcionar, verifique conflito com outro programa e troque na interface.
+- Ao desativar a macro, qualquer execucao em andamento e interrompida.
